@@ -2,7 +2,7 @@
 Detection of early sleep spans in eye-tracking data
 
 # Workflow
-This project must be setup as the following working three:
+This project must be setup as the following working tree:
 
 ```bash
 .
