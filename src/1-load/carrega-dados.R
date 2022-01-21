@@ -1,4 +1,5 @@
 Sys.setlocale("LC_ALL", 'pt_BR')
+#install.packages('tidyverse', dependencies = TRUE)
 library("tidyverse")
 
 cria_df_eyetracking <- function(nome_arquivo) {
@@ -10,24 +11,27 @@ cria_df_eyetracking <- function(nome_arquivo) {
   cleaned_raw_data <- raw_data[-a]
   
   # Criar data frame
-  raw_df <- read_tsv(cleaned_raw_data)
+  raw_df <- read_tsv(I(cleaned_raw_data))
   df <- raw_df[,-1]  
   
   return(df) 
 }
 
 # == Carrega dados grupo controle ==
-filenames <- list.files(here::here("data/project_data_source/selections/2021-11-10/controle")
-                        , full.names = TRUE)
+filenames <- list.files(
+  here::here("data/project_data_source/selections/2021-11-10/controle"), 
+                        full.names = TRUE)
 
 # + cria lista de data-frames
-ldf <- lapply(filenames, function(x) tryCatch(cria_df_eyetracking(x), warning = function(w) print(w) ))
+ldf <- lapply(filenames, 
+              function(x) tryCatch(cria_df_eyetracking(x), 
+                                   warning = function(w) print(w) ))
 
 # Filtragem dos nomes
 names_wtxt <- sub("^.*?(RS)", "", filenames)
 names(ldf) <- sub("..txt", "", names_wtxt)
 
-# Encontra problemáticos
+# Encontra problemáticos / se houver
 which(lengths(ldf) == 2)
 
 # Salva dfs prontos para uso
@@ -36,7 +40,8 @@ dir.create(here::here("data/project_data_source/working/load/controle"),
 
 for (i in seq_along(ldf)) {
   print(names(ldf)[i])
-  file_name <- paste("data/project_data_source/working/load/controle/", names(ldf)[i], ".tsv", sep = "")
+  file_name <- paste("data/project_data_source/working/load/controle/", 
+                     names(ldf)[i], ".tsv", sep = "")
   write_tsv(ldf[[i]], here::here(file_name))
 }
 

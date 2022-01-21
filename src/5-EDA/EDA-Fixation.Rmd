@@ -1,0 +1,87 @@
+---
+title: "EDA Eye-Blink"
+author: "Vinicius Teixeira"
+date: "10/11/2021"
+output:
+  github_document: default
+  html_document: default
+  pdf_document: default
+knit: (
+  function(inputFile, encoding) {
+    rmarkdown::render( 
+      input       = inputFile, 
+      encoding    = encoding,
+      output_file = here::here("output", "EDA-eye-blink")) })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+```
+
+```{r}
+# Efetua média móvel em um vetor com janela n bin
+media_movel <- function(x, bin) {
+  return( stats::filter(x, rep(1/bin, bin), sides=1))
+}
+```
+
+```{r}
+
+participante_aleatorio = participantes$`2100`
+
+# movimentação em x crua
+plpXraw <- ggplot(data = participante_aleatorio) +
+  geom_point(mapping = aes(x = TotalTime, y = pXraw))
+plot(plpXraw)
+# movimentação em y crua
+plpYraw <- ggplot(data = participante_aleatorio) +
+  geom_point(mapping = aes(x = TotalTime, y = pYraw))
+plot(plpYraw)
+# diametro pupilar
+plPW <- ggplot(data = participante_aleatorio) +
+  geom_point(mapping = aes(x = TotalTime, y = PupilWidth))
+plot(plPW)
+# aspecto pupilar
+plPA <- ggplot(data = participante_aleatorio) +
+  geom_point(mapping = aes(x = TotalTime, y = PupilAspect))
+plot(plPA)
+# fixação 
+plFix <- ggplot(data = participante_aleatorio) +
+  geom_point(mapping = aes(x = TotalTime, y = Fixation))
+plot(plFix)
+# qualidade do dado
+plQua <- ggplot(data = participante_aleatorio) +
+  geom_point(mapping = aes(x = TotalTime, y = Quality))
+plot(plQua)
+
+# Compara diferentes plots
+aspectVSwidth <- ggarrange(plPA, plPW, nrow = 2)
+aspectVSwidth
+
+aspectVSpXraw <- ggarrange(plPA, plpXraw, nrow = 2)
+aspectVSpXraw
+
+# Aplicação de media móvel e normalização do pupil Aspect
+pupilAspectMoved <- media_movel(participante_aleatorio$PupilAspect, 60) # sample = 60hz
+
+# RECORTE DOS PRIMEIROS 60 SEGUNDOS SOMENTE
+# plot media movel vs dado bruto
+PupilAspVsPupilAspMA <- ggplot(data = participante_aleatorio[1:3600,])+
+  geom_point(mapping = aes(x = TotalTime, y = PupilAspect)) + 
+  geom_path(mapping = aes(x = TotalTime, y = pupilAspectMoved[1:3600], color = "Media Movel"))
+plot(PupilAspVsPupilAspMA) 
+
+# subtração da media movel do dado bruto e normalização
+pupilAspectSubtracted <- pupilAspectMoved - participante_aleatorio$PupilAspect
+pupilAspectSubtracted[pupilAspectSubtracted < 0] = 0
+
+# plot 
+PltSmoothPupilAsp <- ggplot(data = participante_aleatorio[1:3600,]) +
+  geom_path(mapping = aes(x = TotalTime, y = pupilAspectSubtracted[1:3600], color = "Subtraido da MA"))
+
+PupilAspVSSmoothPupilAsp <- ggarrange(PupilAspVsPupilAspMA, PltSmoothPupilAsp, nrow = 2)
+
+PupilAspVSSmoothPupilAsp
+```

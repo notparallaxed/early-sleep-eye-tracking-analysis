@@ -27,13 +27,13 @@ Create a symbolic link between the ```data``` folder and the real data folder pa
 Using bash:
 
 ```bash
-ln -s /your/data/folder/path/here ./data/project-data-source
+ln -s /your/data/folder/path/here ./data/project_data_source
 ```
 #### Windows:
 Using CMD
 
 ```CMD
-mklink /D "C:\your\data\folder\here" "\data\project-data-source"
+mklink /D "C:\your\data\folder\here" "\data\project_data_source"
 ```
 
 
