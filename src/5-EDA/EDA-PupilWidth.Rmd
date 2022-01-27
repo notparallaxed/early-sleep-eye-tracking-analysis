@@ -1,0 +1,30 @@
+---
+title: "EDA Eye-Blink"
+author: "Vinicius Teixeira"
+date: "24/01/2022"
+output:
+  github_document: default
+  html_document: default
+  pdf_document: default
+knit: (
+  function(inputFile, encoding) {
+    rmarkdown::render( 
+      input       = inputFile, 
+      encoding    = encoding,
+      output_file = here::here("output", "EDA-eye-blink")) })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+
+# Carrega lista de arquivos
+filenames <- list.files(here::here("data/project_data_source/working/cleaned/controle"), full.names = TRUE)
+# Ajeita nomes
+names(filenames) <- sub(".tsv", "", sub("^.*/", "", filenames))
+# Cria lista de participantes
+participantes <- lapply(filenames, read_tsv)
+```
+
+# 
