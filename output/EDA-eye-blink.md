@@ -1,7 +1,12 @@
-EDA Eye-Blink
-================
-Vinicius Teixeira
-10/11/2021
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# EDA Eye-Blink
+
+Vinicius Teixeira 10/11/2021
 
 *Última atualização: 26/01/2022*
 
@@ -55,7 +60,7 @@ períodos de maior e menor frequência de piscadas.
 ## Hipóteses
 
 -   Aspecto pupilar - `PupilAspect` - deve estar igual ou próximo a 1
-    durante momentos de “não piscada”. Portanto, **boa parte da
+    durante momentos de "não piscada". Portanto, **boa parte da
     distribuição dos dados deve ter mediana próximo de 1.**
 
 -   Um evento de piscada consiste na mudança do Aspecto pupilar de 1
@@ -64,10 +69,10 @@ períodos de maior e menor frequência de piscadas.
 
 -   Essa mudança é gradativa, sendo possível notar o *onset* e o
     *offset* da piscada, tal como um vale. Logo, nem todos os pontos
-    destoantes são piscadas, mas sim “parte” da piscada.
+    destoantes são piscadas, mas sim "parte" da piscada.
 
 -   Demais variáveis devem apresentar perturbações, desviando
-    bruscamente o registro da mediana do sinal –> Registros fora de
+    bruscamente o registro da mediana do sinal --\> Registros fora de
     mediana poderiam ser considerados piscadas ou ruídos (outliers).
 
 # Visualização dos dados
@@ -387,7 +392,7 @@ pupAspHist
 
 ## Tentativa de Detecção por Intervalo Interquartil
 
-**Objetivo:** Classificar como “piscada” todos os pontos que estão além
+**Objetivo:** Classificar como "piscada" todos os pontos que estão além
 dos limites do intervalo interquartil.
 
 Para esta tentativa serão considerados somente os limites inferiores,
@@ -396,7 +401,7 @@ uma vez que a natureza do evento reflete somente a diminuição do
 inferiores a massa da distribuição. A massa da distribuição reflete qual
 aspecto pupilar o participante apresenta na maior parte do tempo.
 
-### Teste em participante “ideal”
+### Teste em participante "ideal"
 
 Foi escolhido o participante **2179**, por ter um baixo intervalo
 interquartil e distribuição relativamente simétrica.
@@ -471,7 +476,7 @@ pupAspectXTime_out_graph
 ![](/home/notparallaxed/UFABC/Projetos/IC-Sono-fMRI-eye-tracking/Analise/early-sleep-eye-tracking-analysis/output/EDA-eye-blink_files/figure-gfm/Recorte%20de%201%20minuto-1.png)<!-- -->
 
 Como resultado, 182 pontos foram identificados abaixo do limite
-inferior. Caso todos estes pontos sejam de fato “piscadas” teremos 182
+inferior. Caso todos estes pontos sejam de fato "piscadas" teremos 182
 piscadas por minuto, bem distante do observado na literatura.
 
 #### Recorte de 1 minuto, utilizando cálculo local
@@ -529,3 +534,62 @@ pupAspectXTime_out_graph
 ```
 
 ![](/home/notparallaxed/UFABC/Projetos/IC-Sono-fMRI-eye-tracking/Analise/early-sleep-eye-tracking-analysis/output/EDA-eye-blink_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+# Algoritmo de identificação de piscadas
+
+```{r}
+i_iqrt <- function (xy_points, 
+                  iqr_threshold, temporal_threshold, sample_rate){
+  
+  # Define o tamanho da amostra
+  n = nrow(xy_points)
+  
+  # Define a janela minima, encontrando a quantidade de pontos para aquele limiar      temporal
+  n_min_window = temporal_threshold/1000 * sample_rate
+  n_window = n_min_window # janela inicial corresponde a janela minima.
+  
+  # Guarda as fixacoes
+  blinks <- numeric()
+  pX <- numeric()
+  pY <- numeric()
+  #duration <- numeric()
+  
+  # Enquanto o próximo ponto for menor ou igual ao total de amostras
+  while (nrow(xy_points) > n_window){
+    window_pts = xy_points[1:n_window, ]
+    
+    # Calcula a dispersao da janela
+    d_x = max(window_pts$pXraw) - min(window_pts$pXraw)
+    d_y = max(window_pts$pYraw) - min(window_pts$pYraw)
+    d_total = d_x + d_y
+    
+    if (d_total < iqr_threshold) {
+      while((d_total < iqr_threshold) && (n_window < nrow(xy_points)) ){
+        n_window = n_window + 1
+        window_pts = xy_points[1:n_window, ]
+        
+        # Calcula a dispersao da janela
+        d_x = max(window_pts$pXraw) - min(window_pts$pXraw)
+        d_y = max(window_pts$pYraw) - min(window_pts$pYraw)
+        d_total = d_x + d_y
+      }
+      
+      fixations <- c(fixations, round(n_window/sample_rate, 4))
+      pX <- c(pX, round(mean(window_pts$pXraw), 4))
+      pY <- c(pY, round(mean(window_pts$pYraw), 4))
+      
+      xy_points <- xy_points[-(1:n_window),]
+      n_window = n_min_window
+    } else{
+      fixations <- c(fixations, 0)
+      pX <- c(pX, round(mean(window_pts$pXraw), 4))
+      pY <- c(pY, round(mean(window_pts$pYraw), 4))
+      xy_points <- xy_points[-1,]
+    }
+    
+    print(nrow(xy_points))
+  }
+  
+  return(tibble(fixations, pX, pY))
+}
+```

@@ -17,7 +17,7 @@ knit: (
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(ggpubr)
+#library(ggpubr)
 
 # Carrega lista de arquivos
 filenames <- list.files(here::here("data/project_data_source/working/cleaned/controle"), full.names = TRUE)
@@ -55,7 +55,7 @@ Neste artigo, a abordagem utilizada não estipula um limiar (threshold) para det
 
 -   Essa mudança é gradativa, sendo possível notar o *onset* e o *offset* da piscada, tal como um vale. Logo, nem todos os pontos destoantes são piscadas, mas sim "parte" da piscada.
 
--   Demais variáveis devem apresentar perturbações, desviando bruscamente o registro da mediana do sinal --> Registros fora de mediana poderiam ser considerados piscadas ou ruídos (outliers).
+-   Demais variáveis devem apresentar perturbações, desviando bruscamente o registro da mediana do sinal --\> Registros fora de mediana poderiam ser considerados piscadas ou ruídos (outliers).
 
 # Visualização dos dados
 

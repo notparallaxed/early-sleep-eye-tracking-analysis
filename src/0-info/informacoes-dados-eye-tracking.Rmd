@@ -13,6 +13,7 @@ knit: (
       encoding    = encoding,
       output_file = here::here("output", "informacoes-dados-eye-tracking")) })
 ---
+
 ```{r setup, include=FALSE}
 library("here")
 knitr::opts_chunk$set(echo = TRUE)
@@ -24,29 +25,28 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Os dados foram obtidos utilizando o(s) eye-tracker(s) xxxxx em conjunto com a coleta de dados de fMRI. Foi indicado aos participantes para que observassem o centro de uma cruz e deixassem o pensamento fluir livremente. O registro foi realizado utilizando o software *Arrington Research ViewPoint Eye-Tracking*.
 
-|  Tipo   | Tempo total de captura | Taxa de amostragem |      Suavização      |
-|:-------:|:----------------------:|:------------------:|:--------------------:|
-|Monocular| 6 - 7 minutos          | 60 Hz              | Dados não suavizados |
-
+|   Tipo    | Tempo total de captura | Taxa de amostragem |      Suavização      |
+|:---------:|:----------------------:|:------------------:|:--------------------:|
+| Monocular |     6 - 7 minutos      |       60 Hz        | Dados não suavizados |
 
 ## Formato
 
-O registro foi realizado em **arquivos de texto simples (`.txt`)**, de forma **retangular** (linha coluna), utilizando `tab` como espaçador. 
+O registro foi realizado em **arquivos de texto simples (`.txt`)**, de forma **retangular** (linha coluna), utilizando `tab` como espaçador.
 
- - Cada arquivo corresponde a um participante. 
- - Cada linha corresponde a uma observação. 
- - Cada coluna a uma variável de interesse. 
+-   Cada arquivo corresponde a um participante.
+-   Cada linha corresponde a uma observação.
+-   Cada coluna a uma variável de interesse.
 
-**Entretanto o arquivo bruto não é retangular**, cada início de linha é identificado com um código que se refere ao tipo de dado registrado. Estes códigos são detalhados no [manual do ViewPoint](https://drive.google.com/uc?id=1xldexfhVFQcIbdabKfb37GRuG9qezUWh) > Data Collection >  9.3 Data File Format.
+**Entretanto o arquivo bruto não é retangular**, cada início de linha é identificado com um código que se refere ao tipo de dado registrado. Estes códigos são detalhados no [manual do ViewPoint](https://drive.google.com/uc?id=1xldexfhVFQcIbdabKfb37GRuG9qezUWh) \> Data Collection \> 9.3 Data File Format.
 
 ### Nomenclatura
+
 Os arquivos estão identificados como: `[ano-mês-dia]_[hora-minuto-segundo]RS[XXXX][T]`
 
 Onde:
 
-  - **XXXX:** 4 números referente a identificação do participante
-  - **T:** Número de tentativas
-
+-   **XXXX:** 4 números referente a identificação do participante
+-   **T:** Número de tentativas
 
 ### Exemplo de arquivo bruto
 
@@ -61,20 +61,19 @@ raw_data <- readLines(arquivo)
 cat(raw_data[1:35], sep = "\n")
 ```
 
-
 ### Tipos de registros
 
 O tipo de registro é indicado por um número inteiro ao início de cada linha. Existem 7 tipos de registro:
 
-| Nº Inteiro |                              Significado                            |
+| Nº Inteiro |                             Significado                             |
 |:----------:|:-------------------------------------------------------------------:|
-| 10         | Dado coletado, separado por colunas                                 |
-| 2          | Caractere marcador ASCII indicando o acontecimento de algum evento  |
-| 12         | Texto ASCII indicando algum evento.                                 |
-| 3          | Informações sobre o arquivo, como data, dia, modo de coleta, etc.   |
-| 5          | Informações de cabeçalho, indicando os nomes inteiros das colunas   |
-| 6          | Informações de cabeçalho, indicando os nomes abreviados das colunas |
-| 14         | Informações sobre head tracker.                                     |
+|     10     |                 Dado coletado, separado por colunas                 |
+|     2      | Caractere marcador ASCII indicando o acontecimento de algum evento  |
+|     12     |                 Texto ASCII indicando algum evento.                 |
+|     3      |  Informações sobre o arquivo, como data, dia, modo de coleta, etc.  |
+|     5      |  Informações de cabeçalho, indicando os nomes inteiros das colunas  |
+|     6      | Informações de cabeçalho, indicando os nomes abreviados das colunas |
+|     14     |                   Informações sobre head tracker.                   |
 
 Outros tipos de registros podem ser inseridos, como é o caso do tipo nº 7, indicativo da taxa de quadros ao início de cada captura no exemplo acima.
 
@@ -111,75 +110,74 @@ print(df_1)
 
 ### `TotalTime`
 
-- Tipo: `float`
+-   Tipo: `float`
 
-Corresponde ao valor total de tempo decorrido **em segundos**. A contagem começa a partir do momento em que a captura é iniciada, dai em diante o tempo é somado cumulativamente a cada nova entrada. 
+Corresponde ao valor total de tempo decorrido **em segundos**. A contagem começa a partir do momento em que a captura é iniciada, dai em diante o tempo é somado cumulativamente a cada nova entrada.
 
 ### `DeltaTime`
 
-- Tipo: `float`
+-   Tipo: `float`
 
-Diferença de tempo em relação a última entrada **em milessegundos** -> $\text{dt} = t_n - t_{n-1}$
+Diferença de tempo em relação a última entrada **em milessegundos** -\> $\text{dt} = t_n - t_{n-1}$
 
 ### `X_Gaze`
 
-- Tipo: `float`
+-   Tipo: `float`
 
 Direção do olhar normalizada em relação ao eixo x.
 
 ### `Y_Gaze`
 
-- Tipo: `float`
+-   Tipo: `float`
 
 Direção do olhar normalizada em relação ao eixo y.
 
 > Os valores X e Y de gaze correspondem a coordenadas referentes a direção. Por exemplo, (0.0, 0.0) representa a posição do olhar **no canto superior esquerdo**
 
-
 ### `Region`
 
-- Tipo: `list`
+-   Tipo: `list`
 
 Qual região (ou regiões) de interesse o olhar do participante está apontando.
 
 ### `PupilWidth`
 
-- Tipo: `float`
+-   Tipo: `float`
 
 Largura da pupila normalizada em relação a largura da janela de captura.
 
 ### `PupilAspect`
 
-- Tipo: `float`
+-   Tipo: `float`
 
 Valor adimensional referente ao aspect ratio pupilar. É portanto um valor adimensional, no qual 1 representa que a pupila corresponde a um círculo perfeito.
 
-> Através do PupilAspect é possível determinar a ocorrência de piscadas. Conforme as pálpebras se fecham e ocludem a pupila, a altura e a largura da pupila identificadas pelo eye-tracker modificam-se alterando suas respectivas proporções.  
+> Através do PupilAspect é possível determinar a ocorrência de piscadas. Conforme as pálpebras se fecham e ocludem a pupila, a altura e a largura da pupila identificadas pelo eye-tracker modificam-se alterando suas respectivas proporções.
 
 ### `Quality`
 
-- Tipo: `integer`
+-   Tipo: `integer`
 
 Representa a qualidade da entrada em valores de 0 a 5:
 
-| Código | Descrição                                                                                                                                             |
+| Código |                                                                       Descrição                                                                       |
 |:------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------:|
-| 0      | O usuário selecionou o modo glint-pupil vector e ambos foram reconhecidos com sucesso.                                                                |
-| 1      | O usuário selecionou somente o modo pupil e a pupila foi reconhecida com sucesso                                                                      |
-| 2      | O usuário selecionou o modo glint-pupil vector e o glint não foi reconhecido com sucesso, utilizando somente o método pupilar para captura da entrada |
-| 3      | Independente do modo escolhido, a pupila excedeu os critérios estabelecidos                                                                           |
-| 4      | Independente do modo escolhido, a pupila não pode ser ajustada ao formato elíptico                                                                    |
-| 5      | Independente do modo escolhido, o limiar para escaneamento pupilar falhou                                                                             |
+|   0    |                                O usuário selecionou o modo glint-pupil vector e ambos foram reconhecidos com sucesso.                                 |
+|   1    |                                   O usuário selecionou somente o modo pupil e a pupila foi reconhecida com sucesso                                    |
+|   2    | O usuário selecionou o modo glint-pupil vector e o glint não foi reconhecido com sucesso, utilizando somente o método pupilar para captura da entrada |
+|   3    |                                      Independente do modo escolhido, a pupila excedeu os critérios estabelecidos                                      |
+|   4    |                                  Independente do modo escolhido, a pupila não pode ser ajustada ao formato elíptico                                   |
+|   5    |                                       Independente do modo escolhido, o limiar para escaneamento pupilar falhou                                       |
 
 ### `Fixation`
 
-- Tipo: `float`
+-   Tipo: `float`
 
 Duração da fixação do olhar **em segundos.**
 
 ### `Count`
 
-- Tipo: `integer`
+-   Tipo: `integer`
 
 Contador do número de entradas, a cada nova entrada soma-se 1 ao valor anterior.
 
@@ -188,6 +186,7 @@ Contador do número de entradas, a cada nova entrada soma-se 1 ao valor anterior
 Há entradas que, por motivos desconhecidos, apresentam inconsistências não ignoráveis.
 
 ### `TotalTime = 0` após primeira observação
+
 `TotalTime` corresponde ao total de tempo passado desde a primeira observação. Portanto, entradas que apresentam `TotalTime` zerado, com exceção da primeira observação `(Count = 0`), devem ser consideradas entradas inválidas e devem ser removidas do data frame.
 
 ```{r}
@@ -200,6 +199,3 @@ remove_zerados <- function(x) {
 df_1_cleaned <- remove_zerados(df_1)
 print(df_1)
 ```
-
-
-

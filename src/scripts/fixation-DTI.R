@@ -11,13 +11,15 @@ library(runner)
 #' @return Conjunto de pontos com a duração das fixações, sendo 0 referente a um ponto 
 #' no qual nenhuma fixação foi identificada
 
-i_dt <- function (xy_points, dispersion_threshold, temporal_threshold, sample_rate){
+i_dt <- function (xy_points, 
+                  dispersion_threshold, temporal_threshold, sample_rate){
+  
   # Define o tamanho da amostra
   n = nrow(xy_points)
+  
   # Define a janela minima, encontrando a quantidade de pontos para aquele limiar temporal
   n_min_window = temporal_threshold/1000 * sample_rate
-  # Define a janela igual a janela minima
-  n_window = n_min_window
+  n_window = n_min_window # janela inicial corresponde a janela minima.
   
   # Guarda as fixacoes
   fixations <- tibble(pX=numeric(), pY=numeric(), duration=numeric())
@@ -41,11 +43,16 @@ i_dt <- function (xy_points, dispersion_threshold, temporal_threshold, sample_ra
         d_y = max(window[,2]) - min(window[,2])
         d_total = d_x + d_y
       }
-      print('fixation')
-      #fixations <- fixations %>% 
-       # add_row(pX=window[0, 1], pY=window[0, 2], duration=1)
-    } else {
+      
+      duration = n_window/sample_rate
+      pX_mean = mean(window[,1])
+      pY_mean = mean(window[,2])
+      
+      fixations <- fixations %>% 
+        add_row(pX=pX_mean, pY=pY_mean, duration=duration)
+      
       n_window = n_min_window
+    } else {
       xy_points <- xy_points[-1,]
     }
     
@@ -54,13 +61,6 @@ i_dt <- function (xy_points, dispersion_threshold, temporal_threshold, sample_ra
   return(fixations)
 }
 
-
-fixations <- tibble(pX=numeric(), pY=numeric(), duration=numeric())
-
-fixations <- fixations %>% 
-  add_row(pX=1, pY=1, duration=0)
-
-fixations
 # A janela se expande para um número mínimo de pontos, determinados pelo limiar
 #temporal e pela taxa de amostragem.
 #
@@ -75,10 +75,3 @@ fixations
 
 # O cáculo da dispersão pode ser considerando uma dispersão de 2 graus em relação a distância
 # ou seja: 
-
-
-
-#fixations <- i_dt(participantes$`2100`[, c('pXraw', 'pYraw')], )
-
-
-fixations <- i_dt(participantes$`2100`[,c('pXraw', 'pYraw')], 100, 100, 60)
