@@ -41,3 +41,6 @@ vignettes/*.pdf
 # Data Symlinks
 data/*
 !data/README.md
+
+# MacOS folder thumbnailing
+.DS_Store
