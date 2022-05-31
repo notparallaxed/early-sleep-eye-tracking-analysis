@@ -125,7 +125,7 @@ fixations_participante = list()
 fixations_participante
 
 for (participante in participantes){
-  fixations_participante <- append(fixations_participante, i_dt(participante[,c("pXraw", "pYraw")], 0.1746, 100, 60))
+  fixations_participante <- append(fixations_participante, i_dt(participante[,c("pXraw", "pYraw")], 0.01746, 100, 60))
 }
 
 ```

@@ -9,7 +9,7 @@ bibliography: references.bib
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-#library(ggpubr)
+library(plotly)
 
 # Carrega lista de arquivos
 filenames <- list.files(here::here("data/project_data_source/working/cleaned/controle"), full.names = TRUE)
@@ -215,44 +215,38 @@ Para essa tentativa serão realizadas as seguintes adaptações no algoritmo de 
 
 -   Ao fim, a piscada será considerada no ponto médio da série temporal da janela, registrando sua duração.
 
-## Algoritmo I-DT adaptado
+## Algoritmo I-DT adaptado para detectar piscadas
 
 ```{r}
-i_iqr_blink <- function (xy_points, 
+# Recebe um dataframe com PupilAspect e TotalTime, um limiar baseado no IQR, um limiar temporal e a taxa de amostragem
+
+i_iqr_blink <- function (pa_points, 
                   iqr_threshold, temporal_threshold, sample_rate){
   
-  # Define o tamanho da amostra
-  n = nrow(xy_points)
+  # tamanho total da amostra
+  n <- nrow(pa_points)
   
   # Define a janela minima, encontrando a quantidade de pontos para 
   # aquele limiar temporal
   n_min_window = temporal_threshold/1000 * sample_rate
   n_window = n_min_window # janela inicial corresponde a janela minima.
   
-  # Guarda as fixacoes
-  blinks <- numeric()
-  pX <- numeric()
-  pY <- numeric()
-  #duration <- numeric()
+  # Guarda as piscadas
+  blinks <- tibble(Blinks = numeric(), TotalTimeRef = numeric() )
   
   # Enquanto o próximo ponto for menor ou igual ao total de amostras
-  while (nrow(xy_points) > n_window){
-    window_pts = xy_points[1:n_window, ]
+  while (nrow(pa_points) > n_window){
+    window_pts = pa_points[1:n_window]
     
-    # Calcula a dispersao da janela
-    d_x = max(window_pts$pXraw) - min(window_pts$pXraw)
-    d_y = max(window_pts$pYraw) - min(window_pts$pYraw)
-    d_total = d_x + d_y
-    
-    if (d_total < iqr_threshold) {
-      while((d_total < iqr_threshold) && (n_window < nrow(xy_points)) ){
+    # se o ponto for menor que o limiar iqr
+    if (pa_points[1]$PupilAspect < iqr_threshold) {
+      
+      # enquanto o ponto for menor que o limiar iqr aumenta o tamanho da janela
+      while((pa_points[1]$PupilAspect < iqr_threshold) && 
+            (n_window < nrow(pa_points)) ){
         n_window = n_window + 1
         window_pts = xy_points[1:n_window, ]
         
-        # Calcula a dispersao da janela
-        d_x = max(window_pts$pXraw) - min(window_pts$pXraw)
-        d_y = max(window_pts$pYraw) - min(window_pts$pYraw)
-        d_total = d_x + d_y
       }
       
       fixations <- c(fixations, round(n_window/sample_rate, 4))
@@ -273,4 +267,57 @@ i_iqr_blink <- function (xy_points,
   
   return(tibble(fixations, pX, pY))
 }
+```
+```{r}
+blink_detection_simple <- function (pa_points, threshold) {
+  n_amostra <- nrow(pa_points)
+  
+  blinks <- tibble(BlinkDuration = numeric(), TotalTimeRef = numeric() )
+  
+  while(nrow(pa_points) > 0) {
+    
+    #checa se o ponto esta abaixo do limiar
+    if(pa_points[1, "PupilAspect"] < threshold){
+      window_pa <- numeric()
+      while((nrow(pa_points) > 0) && (pa_points[1, "PupilAspect"] < threshold)){
+        window_pa <- append(window_pa, pa_points[[1, "TotalTime"]])
+        pa_points <- pa_points[-1,]
+      }
+      
+      total_time_ref <- mean(window_pa)
+      duration <- max(window_pa) - min(window_pa)
+      
+      blinks <- blinks %>% add_row(BlinkDuration = duration, 
+                                   TotalTimeRef = total_time_ref)
+    }
+    
+    pa_points <- pa_points[-1,]
+  }
+ return(blinks) 
+}
+```
+
+# Execução para participante ideal
+
+```{r}
+participante2179 <- participantes$`2179`[order(participantes$`2179`$TotalTime), ]
+
+pa_points <- participante2179[c("PupilAspect", "TotalTime")]
+
+limite_inferior <- quantile(pa_points$PupilAspect, 1/4) - 1.5*IQR(pa_points$PupilAspect)
+
+# blinks <- i_iqr_blink(pa_points, 
+#                       iqr_threshold = 0.5, 
+#                       temporal_threshold = 200,
+#                       sample_rate = 60)
+
+blink_results <- blink_detection_simple(pa_points, limite_inferior)
+blink_results
+```
+```{r}
+valid_blinks <- blink_results[ blink_results$BlinkDuration > 0, ]
+valid_blinks
+options(viewer = NULL)
+
+plot_ly(valid_blinks, x = ~TotalTimeRef, y= ~BlinkDuration)
 ```
