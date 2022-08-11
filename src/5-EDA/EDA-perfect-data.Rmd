@@ -1,0 +1,93 @@
+# Teste com dados ideais de eye-tracking
+
+Teste exploratório dos algoritmos I-DT para fixações e piscadas utilizando dados ideais coletados a partir de um experimento de observação de palavras em imagens.
+
+```{r Includes, message=FALSE, warning=FALSE}
+library(dplyr)
+library(magick)
+
+#Algoritmo I-DT para fixaçoes
+source(here::here('src', 'scripts', 'fixation-DTI.R'))
+```
+## Participantes
+Listagem de todos os participantes disponíveis.
+
+```{r paged.print=TRUE}
+# Carrega dados dos participantes
+df_todos_participantes <- read.csv2(
+  here::here('data', 'project_data_source', 'Coleta', 'Dados Teste', 'palT1.csv'))
+
+# Separa participantes em diferentes data frames a partir da coluna Name
+ldfs_participantes <- split(df_todos_participantes, df_todos_participantes$Name)
+
+rmarkdown::paged_table(data.frame("Participantes"=names(ldfs_participantes)))
+```
+
+## Análise participante 40
+Imagem "Peteca"
+
+```{r Participante 40, paged.print=TRUE}
+df_p40 <- ldfs_participantes$`P 40`
+rmarkdown::paged_table(df_p40)
+```
+
+Plot dos dados brutos de POR (pX,pY), eixo Y invertido e ajustado para se adequar a imagem original.
+
+```{r}
+img_bg <- image_read(
+  here::here('data', 'project_data_source', 'Coleta', 'Dados Teste', 'suj24e40palT1.jpg' ))
+
+ggplot(df_p40[, c('X', 'Y') ], aes(x=X, y=(-Y+600))) + 
+  geom_point(color='red') + 
+  geom_path(color='red')
+```
+
+### Cálculo de métricas do participante
+
+```{r}
+n_obs <- nrow(df_p40)
+total_period <- df_p40$Time[n_obs]*(10**-3) #in seconds
+frame_rate <- n_obs/total_period
+time_gap <- median(df_p40$Timegap)
+```
+
+| Métrica                | Valor                    |
+|------------------------|--------------------------|
+| Número de Observações  | `r n_obs`                |
+| Tempo Total Percorrido | `r total_period`         |
+| Mediana de tempo/obs   | `r time_gap`             |
+| FPS                    | `r round(frame_rate, 3)` |
+
+: P40 Stats
+
+### Cálculo de fixações utilizando I-DT
+
+A ordem dos registros na tabela indica a ordem de ocorrência das fixações.
+
+```{r}
+
+xy_points <- df_p40[, c('X', 'Y') ]
+
+p40_fixations <- i_dt(xy_points,
+                     dispersion_threshold = 50 , #limiar aleatório, ideal 2º
+                     temporal_threshold = 100, #pre definido, em ms 
+                     sample_rate = round(frame_rate)
+                     )
+rmarkdown::paged_table(p40_fixations)
+```
+
+### Plot fixações
+
+Fixações representadas pelos pontos verdes, com sua respectiva duração posicionada ao lado do ponto. Pontos vermelhos representam os POR (x,y) brutos.
+
+```{r}
+
+ggplot(NULL) +
+  geom_point(data = df_p40[, c('X', 'Y') ], aes(x=X, y=(-Y+600)), color='red') + 
+  geom_path(data = df_p40[, c('X', 'Y') ], aes(x=X, y=(-Y+600)), color='red') +
+  geom_point(data = p40_fixations, aes(x=pX, y=(-pY+600)), color="green") +
+  geom_text(data = p40_fixations, aes(x=pX, y=(-pY+600), label=duration), hjust=-0.3)
+
+  
+  
+```

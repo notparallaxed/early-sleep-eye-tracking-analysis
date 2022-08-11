@@ -3,8 +3,9 @@ library("tidyverse")
 
 # Seleciona arquivos
 filenames <- list.files(
-      here::here("data/project_data_source/working/load/controle"),
+      here::here("data", "project_data_source", "working", "load", "controle"),
       full.names = TRUE)
+
 # Ajeita nomes
 names(filenames) <- sub(".tsv", "", sub("^.*/", "", filenames))
 
