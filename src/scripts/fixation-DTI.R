@@ -1,5 +1,17 @@
 library(tidyverse)
-library(runner)
+
+#' Calcula a dispersao de uma janela de n pontos. Isto é, verifica qual a maior
+#' distancia entre todos os pontos presentes na janela. Este calculo é o mesmo
+#' que a norma de um vetor dado pelos dois pontos mais distantes entre si.
+#' 
+#' @param window_pts Conjunto de pontos X e Y de uma janela.
+#' @return D = (max[X] - min[X]) + (max[Y] - min[Y]) 
+
+window_dispersion <- function(window_pts) {
+  d_x <- max(window_pts[,1]) - min(window_pts[,1])
+  d_y <- max(window_pts[,2]) - min(window_pts[,2])
+  d_total <- d_x + d_y
+}
 
 #' Detecta fixações em um conjunto (x,y) de pontos de movimentação ocular utilizando 
 #' um algoritmo de limiar de dispersão (I-DT) como previsto em (Salvucci, 2009)
@@ -15,43 +27,43 @@ i_dt <- function (xy_points,
                   dispersion_threshold, temporal_threshold, sample_rate){
   
   # Define o tamanho da amostra
-  n = nrow(xy_points)
+  n <- nrow(xy_points)
   
   # Define a janela minima, encontrando a quantidade de pontos para aquele limiar temporal
-  n_min_window = temporal_threshold/1000 * sample_rate
+  n_min_window <- temporal_threshold/1000 * sample_rate
   n_window = n_min_window # janela inicial corresponde a janela minima.
   
   # Guarda as fixacoes
   fixations <- tibble(pX=numeric(), pY=numeric(), duration=numeric())
   
   # Enquanto o próximo ponto for menor ou igual ao total de amostras
-  while (nrow(xy_points) > 0){
-    window = xy_points[1:n_window, ]
+  while (nrow(xy_points) > n_window){
+    window <- xy_points[1:n_window, ]
     
     # Calcula a dispersao da janela
-    d_x = max(window[,1]) - min(window[,1])
-    d_y = max(window[,2]) - min(window[,2])
-    d_total = d_x + d_y
+    d_total <- window_dispersion(window)
     
     if (d_total < dispersion_threshold) {
-      while(d_total < dispersion_threshold){
-        n_window = n_window + 1
+      while(d_total < dispersion_threshold && n_window < nrow(xy_points)){
+        n_window <- n_window + 1
         window = xy_points[1:n_window, ]
         
-        # Calcula a dispersao da janela
-        d_x = max(window[,1]) - min(window[,1])
-        d_y = max(window[,2]) - min(window[,2])
-        d_total = d_x + d_y
+        d_total <- window_dispersion(window)
       }
       
-      duration = n_window/sample_rate
-      pX_mean = mean(window[,1])
-      pY_mean = mean(window[,2])
+      # Remove ultimo ponto que ultrapassou limiar de dispersão
+      n_window <- n_window - 1
+      window <- window[1:n_window, ]
       
-      fixations <- fixations %>% 
-        add_row(pX=pX_mean, pY=pY_mean, duration=duration)
+      # Calcula ponto médio da fixação e duração
+      duration <- round(n_window/sample_rate, 4)*(10**3) # em ms
+      pX_mean <- round(mean(window[,1]))
+      pY_mean <- round(mean(window[,2]))
       
-      n_window = n_min_window
+      fixations <- add_row(fixations, pX=pX_mean, pY=pY_mean, duration=duration)
+      
+      xy_points <- xy_points[-(1:n_window), ]
+      n_window <- n_min_window
     } else {
       xy_points <- xy_points[-1,]
     }
