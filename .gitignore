@@ -38,6 +38,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+#Mac Folder Trash
+.DS_Store
+
 # Data Symlinks
 data/*
 !data/README.md
