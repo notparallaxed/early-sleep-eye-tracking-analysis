@@ -1,0 +1,84 @@
+# Análise de piscadas em dados de Eye-Tracking
+
+```{r}
+library(tidyverse)
+library(gt)
+```
+
+## Load Data
+
+```{r}
+participantes <- lapply(list.files(here::here("data", "project_data_source", "Processados","Eye_Tracking", "Controle"), full.names = TRUE), read_tsv)
+
+pat_names <- basename(list.files(here::here("data", "project_data_source", "Processados","Eye_Tracking", "Controle"), full.names = TRUE))
+
+names(participantes) <- gsub(".tsv", "", pat_names)
+```
+
+### Clear Data
+
+```{r}
+# Remover TotalTime zerados
+remove_zerados <- function(x) {
+  df_zerado = filter(x, TotalTime != 0 | Count == 0)
+  return(df_zerado)
+}
+
+participantes <- lapply(participantes, remove_zerados)
+```
+
+# Descritivo
+
+## Participantes
+
+```{r}
+names(participantes)
+```
+
+## Métricas de captura e aspecto pupilar
+
+O aspecto pupilar será utilizado para determinar a quantidade de piscadas em cada determinada janela de tempo.
+
+Também se faz necessário normalizar o tempo de captura de todos os participantes, para que seja analisado um mesmo período e uma mesma quantidade de observações.
+
+```{r}
+
+df_pat_metrics <- tibble(participante=character(),
+                         n_obs=numeric(),
+                         max_total_time=numeric(),
+                         freq=numeric(),
+                         max_pa=numeric(),
+                         min_pa=numeric(),
+                         median_pa=numeric(),
+                         iqr_pa=numeric())
+                         
+                         
+for (i in seq_along(participantes)) {
+  df_pat_metrics <- df_pat_metrics %>% add_row(
+    participante= names(participantes)[i],
+    max_total_time= max(participantes[[i]]$TotalTime),
+    n_obs=nrow(participantes[[i]]),
+    freq= (nrow(participantes[[i]]) / max(participantes[[i]]$TotalTime)),
+    max_pa=max(participantes[[i]]$PupilAspect),
+    min_pa=min(participantes[[i]]$PupilAspect),
+    median_pa=median(participantes[[i]]$PupilAspect),
+    iqr_pa=IQR(participantes[[i]]$PupilAspect)
+  )
+}
+
+df_pat_metrics
+```
+
+#### Participante com menor período de registro
+
+```{r}
+min(df_pat_metrics$max_total_time)/60
+```
+
+Dado que o menor tempo total percorrido por participante corresponde a *6 minutos*, **serão utilizados os 6 primeiros minutos de cada captura.**
+
+```{r}
+participantes_tm <- lapply(participantes, function (participante) participante[participante$TotalTime <= 360,] )
+```
+
+# Detecção de piscadas

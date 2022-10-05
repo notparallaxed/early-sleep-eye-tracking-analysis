@@ -1,5 +1,4 @@
-Sys.setlocale("LC_ALL", 'pt_BR')
-library("tidyverse")
+library(tidyverse)
 
 cria_df_eyetracking <- function(nome_arquivo) {
   # Carregar aquivo bruto
@@ -16,10 +15,10 @@ cria_df_eyetracking <- function(nome_arquivo) {
   return(df) 
 }
 
-# == Carrega dados grupo controle ==
+# Carrega participantes controle com VAMS processado
 filenames <- list.files(
-  here::here("data/project_data_source/selections/2021-11-10/controle"), 
-                        full.names = TRUE)
+  here::here("data", "project_data_source", "Coleta","Eye_Tracking","sujeitos_VAMS", "Controle", "Selecionados"), 
+  full.names = TRUE)
 
 # + cria lista de data-frames
 ldf <- lapply(filenames, 
@@ -30,19 +29,10 @@ ldf <- lapply(filenames,
 names_wtxt <- sub("^.*?(RS)", "", filenames)
 names(ldf) <- sub("..txt", "", names_wtxt)
 
-# Encontra problemáticos / se houver
-which(lengths(ldf) == 2)
-
 # Salva dfs prontos para uso
-dir.create(here::here("data/project_data_source/working/load/controle"),
-           recursive = TRUE)
 
 for (i in seq_along(ldf)) {
   print(names(ldf)[i])
-  file_name <- paste("data/project_data_source/working/load/controle/", 
-                     names(ldf)[i], ".tsv", sep = "")
-  write_tsv(ldf[[i]], here::here(file_name))
+  file_name <- paste0(names(ldf)[i], ".tsv")
+  write_tsv(ldf[[i]], here::here("data", "project_data_source", "Processados", "Eye_Tracking", "Controle", file_name))
 }
-
-
-
